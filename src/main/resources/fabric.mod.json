@@ -1,8 +1,8 @@
 {
 	"schemaVersion": 1,
-	"id": "difficulty",
+	"id": "difficultymod",
 	"version": "${version}",
-	"name": "difficulty",
+	"name": "The Masochist Difficulty",
 	"description": "A Masochist difficulty for Minecraft, you have been warned.",
 	"authors": [
 		"Jasper Clarke <me@jasperclarke.com>"
@@ -12,21 +12,21 @@
 		"sources": "https://github.com/FabricMC/fabric-example-mod"
 	},
 	"license": "MIT",
-	"icon": "assets/difficulty/icon.png",
+	"icon": "assets/difficultymod/icon.png",
 	"environment": "*",
 	"entrypoints": {
 		"main": [
-			"com.jasperclarke.difficulty.Difficulty"
+			"com.jasperclarke.difficultymod.DifficultyMod"
 		],
 		"fabric-datagen": [
-			"com.jasperclarke.difficulty.DifficultyDataGenerator"
+			"com.jasperclarke.difficultymod.DifficultyModDataGenerator"
 		],
 		"client": [
-			"com.jasperclarke.difficulty.DifficultyClient"
+			"com.jasperclarke.difficultymod.DifficultyModClient"
 		]
 	},
 	"mixins": [
-		"difficulty.mixins.json"
+		"difficultymod.mixins.json"
 	],
 	"depends": {
 		"fabricloader": ">=0.16.9",

@@ -1,6 +1,6 @@
-package com.jasperclarke.difficulty.mixin;
+package com.jasperclarke.difficultymod.mixin;
 
-import com.jasperclarke.difficulty.item.ModItems;
+import com.jasperclarke.difficultymod.item.ModItems;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.server.network.ServerPlayerEntity;
@@ -17,7 +17,7 @@ public class FirstJoinHardcoreMixin {
         ServerPlayerEntity player = (ServerPlayerEntity) (Object) this;
 
         // Check if it's the player's first tick in the world
-        if (player.getStatHandler().getStat(Stats.CUSTOM.getOrCreateStat(Stats.PLAY_TIME)) == 1) {
+        if (player.getStatHandler().getStat(Stats.CUSTOM.getOrCreateStat(Stats.TOTAL_WORLD_TIME)) == 1) {
             // Check if the world is in hardcore mode
             if (player.getWorld().getLevelProperties().isHardcore()) {
                 PlayerInventory inventory = player.getInventory();

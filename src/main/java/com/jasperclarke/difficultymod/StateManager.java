@@ -1,4 +1,4 @@
-package com.jasperclarke.difficulty;
+package com.jasperclarke.difficultymod;
 
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.registry.RegistryWrapper;
@@ -37,7 +37,7 @@ public class StateManager extends PersistentState {
         // The first time the following 'getOrCreate' function is called, it creates a brand new 'StateManager' and
         // stores it inside the 'PersistentStateManager'. The subsequent calls to 'getOrCreate' pass in the saved
         // 'StateManager' NBT on disk to our function 'StateManager::createFromNbt'.
-        StateManager state = persistentStateManager.getOrCreate(type, Difficulty.MOD_ID);
+        StateManager state = persistentStateManager.getOrCreate(type, DifficultyMod.MOD_ID);
 
         // If state is not marked dirty, when Minecraft closes, 'writeNbt' won't be called and therefore nothing will be saved.
         // Technically it's 'cleaner' if you only mark state as dirty when there was actually a change, but the vast majority

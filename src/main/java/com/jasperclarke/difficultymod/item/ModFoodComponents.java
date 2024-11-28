@@ -1,4 +1,4 @@
-package com.jasperclarke.difficulty.item;
+package com.jasperclarke.difficultymod.item;
 
 import net.minecraft.component.type.FoodComponent;
 

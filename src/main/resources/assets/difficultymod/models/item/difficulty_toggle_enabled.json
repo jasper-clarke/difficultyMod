@@ -1,6 +1,6 @@
 {
   "parent": "minecraft:item/generated",
   "textures": {
-    "layer0": "difficulty:item/putrid_flesh"
+    "layer0": "difficultymod:item/difficulty_toggle"
   }
 }

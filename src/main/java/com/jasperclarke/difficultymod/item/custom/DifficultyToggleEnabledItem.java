@@ -1,7 +1,7 @@
-package com.jasperclarke.difficulty.item.custom;
+package com.jasperclarke.difficultymod.item.custom;
 
-import com.jasperclarke.difficulty.StateManager;
-import com.jasperclarke.difficulty.item.ModItems;
+import com.jasperclarke.difficultymod.StateManager;
+import com.jasperclarke.difficultymod.item.ModItems;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -14,7 +14,6 @@ import net.minecraft.util.Hand;
 import net.minecraft.world.World;
 
 import java.util.List;
-import java.util.Objects;
 
 public class DifficultyToggleEnabledItem extends Item {
     public DifficultyToggleEnabledItem(Settings settings) {
