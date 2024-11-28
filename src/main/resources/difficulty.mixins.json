@@ -1,0 +1,13 @@
+{
+	"required": true,
+	"package": "com.jasperclarke.difficulty.mixin",
+	"compatibilityLevel": "JAVA_21",
+	"mixins": [
+		"FirstJoinHardcoreMixin",
+		"ZombieLikesPutridFleshMixin",
+		"ZombieEntityAccessor"
+	],
+	"injectors": {
+		"defaultRequire": 1
+	}
+}
