@@ -1,12 +1,14 @@
 {
-	"required": true,
-	"package": "com.jasperclarke.difficultymod.mixin",
-	"compatibilityLevel": "JAVA_21",
-	"mixins": [
-		"FirstJoinHardcoreMixin",
-		"ZombieBeefMixin"
-	],
-	"injectors": {
-		"defaultRequire": 1
+  "required": true,
+  "package": "com.jasperclarke.difficultymod.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "mixins": [
+    "CreeperBeefMixin",
+    "FirstJoinHardcoreMixin",
+    "SkeletonBeefMixin",
+    "ZombieBeefMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
 	}
 }

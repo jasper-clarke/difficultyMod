@@ -6,21 +6,22 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.world.PersistentState;
 import net.minecraft.world.PersistentStateManager;
 import net.minecraft.world.World;
+import net.minecraft.world.level.LevelInfo;
 
 import java.util.Objects;
 
 public class StateManager extends PersistentState {
-    public Boolean difficultToggled = false;
+    public Boolean difficultyToggled = false;
 
     @Override
     public NbtCompound writeNbt(NbtCompound nbt, RegistryWrapper.WrapperLookup registries) {
-        nbt.putBoolean("difficultToggled", difficultToggled);
+        nbt.putBoolean("difficultToggled", difficultyToggled);
         return nbt;
     }
 
     public static StateManager createFromNbt(NbtCompound tag, RegistryWrapper.WrapperLookup registryLookup) {
         StateManager state = new StateManager();
-        state.difficultToggled = tag.getBoolean("difficultToggled");
+        state.difficultyToggled = tag.getBoolean("difficultToggled");
         return state;
     }
 

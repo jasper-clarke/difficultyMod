@@ -24,10 +24,10 @@ public class DifficultyToggleEnabledItem extends Item {
     public ActionResult use(World world, PlayerEntity user, Hand hand) {
         if (!world.isClient()) {
             StateManager serverState = StateManager.getServerState(world.getServer());
-            serverState.difficultToggled = false;
+            serverState.difficultyToggled = false;
             world.playSound(null, user.getX(), user.getY(), user.getZ(), SoundEvents.ENTITY_CAT_DEATH, SoundCategory.AMBIENT, 1.0F, 1.0F);
             user.setStackInHand(hand, new ItemStack(ModItems.DIFFICULTY_TOGGLE_DISABLED));
-            user.sendMessage(Text.of("Given up already? Enabled: " + serverState.difficultToggled.toString()), true);
+            user.sendMessage(Text.of("Given up already? Enabled: " + serverState.difficultyToggled.toString()), true);
         }
         return ActionResult.SUCCESS;
     }

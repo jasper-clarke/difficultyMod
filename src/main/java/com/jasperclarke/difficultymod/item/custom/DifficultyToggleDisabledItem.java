@@ -1,7 +1,6 @@
 package com.jasperclarke.difficultymod.item.custom;
 
 import com.jasperclarke.difficultymod.StateManager;
-import com.jasperclarke.difficultymod.item.ModItems;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -25,7 +24,7 @@ public class DifficultyToggleDisabledItem extends Item {
     public ActionResult use(World world, PlayerEntity user, Hand hand) {
         if (!world.isClient()) {
             StateManager serverState = StateManager.getServerState(world.getServer());
-            serverState.difficultToggled = true;
+            serverState.difficultyToggled = true;
             world.playSound(null, user.getX(), user.getY(), user.getZ(), SoundEvents.BLOCK_END_PORTAL_SPAWN, SoundCategory.AMBIENT, 1.0F, 1.0F);
 //            user.setStackInHand(hand, new ItemStack(ModItems.DIFFICULTY_TOGGLE_ENABLED));
             user.sendMessage(Text.of("Prepare for pain... Masochist Difficulty Enabled"), true);

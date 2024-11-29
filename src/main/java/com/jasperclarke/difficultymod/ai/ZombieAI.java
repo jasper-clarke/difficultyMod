@@ -1,14 +1,22 @@
 package com.jasperclarke.difficultymod.ai;
 
+import com.jasperclarke.difficultymod.StateManager;
 import com.jasperclarke.difficultymod.item.ModItems;
+import net.minecraft.block.BlockState;
+import net.minecraft.block.Blocks;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.entity.ItemEntity;
 import net.minecraft.entity.ai.goal.Goal;
+import net.minecraft.entity.ai.pathing.Path;
 import net.minecraft.entity.mob.ZombieEntity;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
+import net.minecraft.item.Items;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Vec3d;
 
 import java.util.EnumSet;
 import java.util.List;
@@ -111,6 +119,223 @@ public class ZombieAI {
         @Override
         public void stop() {
             eatingTicks = 0;
+        }
+    }
+
+    public static class ZombieBreakBlockGoal extends Goal {
+        private final ZombieEntity zombie;
+        private BlockPos targetBlock;
+        private int breakingTime;
+        private int lastBreakingProgress = -1;
+        private PlayerEntity targetPlayer;
+        private static final double MAX_BREAK_DISTANCE = 5.0;
+
+        public ZombieBreakBlockGoal(ZombieEntity zombie) {
+            this.zombie = zombie;
+            this.setControls(EnumSet.of(Goal.Control.MOVE, Goal.Control.LOOK, Goal.Control.JUMP));
+        }
+
+        private PlayerEntity findNearestPlayer() {
+            // Find nearest player within 32 blocks, ignoring line of sight
+            return zombie.getWorld().getClosestPlayer(
+                    zombie.getX(), zombie.getY(), zombie.getZ(),
+                    32.0D, // Range
+                    true   // Ignore line of sight
+            );
+        }
+
+        private boolean canPathDirectlyToPlayer() {
+            if (targetPlayer == null) return false;
+            Path path = zombie.getNavigation().findPathTo(targetPlayer, 0);
+            return path != null && path.reachesTarget();
+        }
+
+        private BlockPos findBlockToBreak() {
+            if (targetPlayer == null) return null;
+
+            if (canPathDirectlyToPlayer()) return null;
+
+            Vec3d zombiePos = zombie.getPos();
+            Vec3d playerPos = targetPlayer.getPos();
+
+            // Check if zombie is too far from the block
+            if (zombiePos.squaredDistanceTo(playerPos) > MAX_BREAK_DISTANCE * MAX_BREAK_DISTANCE) {
+                return null;
+            }
+
+            // Check if there's a height difference
+            double yDiff = playerPos.y - zombiePos.y;
+
+            // If player is above, check blocks below them first
+            if (yDiff > 1) {
+                BlockPos belowPlayer = targetPlayer.getBlockPos().down();
+                BlockState belowState = zombie.getWorld().getBlockState(belowPlayer);
+                if (!belowState.isAir() && canBreakBlock(belowState, belowPlayer)) {
+                    return belowPlayer;
+                }
+            }
+
+            // Get direction to player
+            Vec3d direction = playerPos.subtract(zombiePos).normalize();
+
+            // Check blocks in the path
+            for (int i = 1; i <= 4; i++) {
+                Vec3d checkPos = zombiePos.add(direction.multiply(i));
+                BlockPos pos = new BlockPos((int)checkPos.x, (int)zombiePos.y, (int)checkPos.z);
+
+                // Check block at feet level
+                if (checkBlock(pos)) return pos;
+
+                // Check block above feet level
+                if (checkBlock(pos.up())) return pos.up();
+
+                // If we're trying to go up or down, check those blocks too
+                if (yDiff > 1) {
+                    if (checkBlock(pos.up(2))) return pos.up(2);
+                } else if (yDiff < -1) {
+                    if (checkBlock(pos.down())) return pos.down();
+                }
+            }
+
+            return null;
+        }
+
+        private boolean checkBlock(BlockPos pos) {
+            BlockState state = zombie.getWorld().getBlockState(pos);
+            return !state.isAir() && canBreakBlock(state, pos);
+        }
+
+        private boolean canBreakBlock(BlockState state, BlockPos pos) {
+            float hardness = state.getHardness(zombie.getWorld(), pos);
+            if (hardness < 0 || hardness >= 50.0f || state.isOf(Blocks.BEDROCK)) {
+                return false;
+            }
+
+            ItemStack heldItem = zombie.getEquippedStack(EquipmentSlot.MAINHAND);
+
+            // Check if the block is appropriate for the held tool
+            // For pickaxe, allow any block that's not in the shovel list
+            if (heldItem.isOf(Items.IRON_SHOVEL)) {
+                // List of blocks that can be efficiently mined with a shovel
+                return state.isOf(Blocks.DIRT) ||
+                        state.isOf(Blocks.GRASS_BLOCK) ||
+                        state.isOf(Blocks.SAND) ||
+                        state.isOf(Blocks.GRAVEL) ||
+                        state.isOf(Blocks.SOUL_SAND) ||
+                        state.isOf(Blocks.SOUL_SOIL) ||
+                        state.isOf(Blocks.MYCELIUM) ||
+                        state.isOf(Blocks.SNOW) ||
+                        state.isOf(Blocks.SNOW_BLOCK) ||
+                        state.isOf(Blocks.CLAY);
+            } else return heldItem.isOf(Items.IRON_PICKAXE);
+        }
+
+        @Override
+        public boolean canStart() {
+            if (!zombie.getWorld().isClient()) {
+                StateManager serverState = StateManager.getServerState(zombie.getWorld().getServer());
+                if (!serverState.difficultyToggled) {
+                    return false;
+                }
+            }
+
+            if (!zombie.getEquippedStack(EquipmentSlot.MAINHAND).isOf(Items.IRON_PICKAXE) ||
+                    !zombie.getEquippedStack(EquipmentSlot.MAINHAND).isOf(Items.IRON_SHOVEL)) {
+                return false;
+            }
+
+            targetPlayer = findNearestPlayer();
+            if (targetPlayer == null) return false;
+
+            if (canPathDirectlyToPlayer()) return false;
+
+            targetBlock = findBlockToBreak();
+            return targetBlock != null;
+        }
+
+        @Override
+        public void start() {
+            breakingTime = 0;
+            lastBreakingProgress = -1;
+        }
+
+        @Override
+        public void stop() {
+            if (targetBlock != null) {
+                zombie.getWorld().setBlockBreakingInfo(zombie.getId(), targetBlock, -1);
+            }
+            targetBlock = null;
+        }
+
+        @Override
+        public boolean shouldContinue() {
+            return targetBlock != null
+                    && targetPlayer != null
+                    && targetPlayer.isAlive()
+                    && !zombie.getWorld().getBlockState(targetBlock).isAir()
+                    && (zombie.getEquippedStack(EquipmentSlot.MAINHAND).isOf(Items.IRON_PICKAXE) ||
+                            zombie.getEquippedStack(EquipmentSlot.MAINHAND).isOf(Items.IRON_SHOVEL))
+                    && zombie.squaredDistanceTo(targetPlayer) <= 32 * 32;
+        }
+
+        @Override
+        public void tick() {
+            if (targetBlock == null) return;
+
+            BlockState state = zombie.getWorld().getBlockState(targetBlock);
+            float hardness = state.getHardness(zombie.getWorld(), targetBlock);
+
+            // Move closer to the block if too far
+            if (zombie.squaredDistanceTo(
+                    targetBlock.getX() + 0.5,
+                    targetBlock.getY() + 0.5,
+                    targetBlock.getZ() + 0.5) > 4.0) {
+                zombie.getNavigation().startMovingTo(
+                        targetBlock.getX() + 0.5,
+                        targetBlock.getY(),
+                        targetBlock.getZ() + 0.5,
+                        1.0);
+            } else {
+                zombie.getNavigation().stop();
+            }
+
+            zombie.getLookControl().lookAt(
+                    targetBlock.getX() + 0.5,
+                    targetBlock.getY() + 0.5,
+                    targetBlock.getZ() + 0.5
+            );
+
+            breakingTime++;
+            int progress = (int)((breakingTime / (hardness * 30.0F)) * 10.0F);
+
+            if (progress != lastBreakingProgress) {
+                zombie.getWorld().setBlockBreakingInfo(zombie.getId(), targetBlock, progress);
+                lastBreakingProgress = progress;
+            }
+
+            if (progress >= 10) {
+                zombie.getWorld().breakBlock(targetBlock, true, zombie);
+                targetBlock = null;
+                if (!canPathDirectlyToPlayer()) {
+                    targetBlock = findBlockToBreak();
+                    if (targetBlock != null) {
+                        breakingTime = 0;
+                        lastBreakingProgress = -1;
+                    }
+                }
+            }
+
+            // Play breaking sound and particles
+            if (breakingTime % 4 == 0) {
+                zombie.getWorld().playSound(
+                        null,
+                        targetBlock,
+                        state.getSoundGroup().getHitSound(),
+                        SoundCategory.HOSTILE,
+                        1.0F,
+                        0.8F
+                );
+            }
         }
     }
 }
